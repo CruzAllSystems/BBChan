@@ -56,8 +56,7 @@ async def bb_talk(interaction: discord.Interaction, channel: discord.TextChannel
         ephemeral=True
     )
 
-@bot.tree.command(name="bb_shutup", description="Deactivates BB's auto/idle messages in the first text channel")
-@app_commands.describe(channel="Channel to stop idle messages to.")
+@bot.tree.command(name="bb_shutup", description="Deactivates BB's auto/idle messages in the text channels")
 async def bb_shutup(interaction: discord.Interaction):
     bb_idle_messages.stop()
 
