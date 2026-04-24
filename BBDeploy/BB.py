@@ -27,10 +27,10 @@ BB_LINES = [
 async def on_ready():
     await bot.tree.sync()
     print(f"{bot.user} is online!")
-    bb_idle_messages.start()
+    #bb_idle_messages.start()
 
 # ===== Idle BB Messages =====
-@tasks.loop(minutes=120)
+@tasks.loop(minutes=720)
 async def bb_idle_messages():
     for guild in bot.guilds:
         chan = discord.utils.get(guild.text_channels, name="general")
@@ -39,6 +39,15 @@ async def bb_idle_messages():
                 message = random.choice(BB_LINES)
                 await channel.send(message)
                 break
+
+#=====COMMANDS TO SHUT OFF AND TURN ON BB IDLE MESSAGES======
+@bot.tree.command(name="bb_talk", description="Activate BB's auto/idle messages in the first text channel")
+async def bb_talk():
+    bb_idle_messages.start()
+
+@bot.tree.command(name="bb_shutup", description="Deactivates BB's auto/idle messages in the first text channel")
+async def bb_shutup():
+    bb_idle_messages.stop()
 
 # ===== POLL COMMAND =====
 poll_messages = {}
@@ -141,6 +150,49 @@ async def bb_say(
 
     await interaction.response.send_message(
         f"Message delivered to {channel.mention}, senpai~",
+        ephemeral=True
+    )
+
+# ===== ADMIN CONTROLLED IMAGE SEND=====
+@bot.tree.command(name="bb_image", description="Make BB send an image")
+@app_commands.describe(
+    channel="Channel to send the image to",
+    image="Image file to upload",
+    caption="Optional caption"
+)
+async def bb_image(
+    interaction: discord.Interaction,
+    channel: discord.TextChannel,
+    image: discord.Attachment,
+    caption: str = None
+):
+    if not interaction.user.guild_permissions.administrator:
+        await interaction.response.send_message(
+            "Ehh~ You can't command BB like that, senpai~",
+            ephemeral=True
+        )
+        return
+
+    if not channel.permissions_for(interaction.guild.me).send_messages:
+        await interaction.response.send_message(
+            "BB can't speak there~ how tragic~",
+            ephemeral=True
+        )
+        return
+
+    #Basic type check
+    if not image.content_type or not image.content_type.startswith("image"):
+        await interaction.response.send_message(
+            "That doesn't look like an image, senpai~",
+            ephemeral=True
+        )
+        return
+
+    file = await image.to_file()
+    await channel.send(content=(caption + "~" if caption else None), file=file)
+
+    await interaction.response.send_message(
+        f"Image delivered to {channel.mention}~",
         ephemeral=True
     )
 
