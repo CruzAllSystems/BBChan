@@ -31,7 +31,7 @@ async def on_ready():
 
 # ===== Idle BB Messages =====
 @tasks.loop(minutes=720)
-async def bb_idle_messages(channel: discord.TextChannel):
+async def bb_idle_messages():
     if not idle_channel_id:
         return
 
@@ -49,7 +49,7 @@ async def bb_talk(interaction: discord.Interaction, channel: discord.TextChannel
     global idle_channel_id
     idle_channel_id = channel.id
     if not bb_idle_messages.is_running():
-        bb_idle_messages.start(channel)
+        bb_idle_messages.start()
 
     await interaction.response.send_message(
         f"BB will now speak cutesy in {channel.mention}~",
