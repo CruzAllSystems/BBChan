@@ -27,18 +27,43 @@ BB_LINES = [
 async def on_ready():
     await bot.tree.sync()
     print(f"{bot.user} is online!")
-    bb_idle_messages.start()
+    #bb_idle_messages.start()
 
 # ===== Idle BB Messages =====
-@tasks.loop(minutes=120)
+@tasks.loop(minutes=720)
 async def bb_idle_messages():
+    if not idle_channel_id:
+        return
+
     for guild in bot.guilds:
-        chan = discord.utils.get(guild.text_channels, name="general")
-        for channel in guild.text_channels:
-            if channel.permissions_for(guild.me).send_messages and chan:
-                message = random.choice(BB_LINES)
-                await channel.send(message)
-                break
+        chan = guild.get_channel(idle_channel_id)
+        if chan.permissions_for(guild.me).send_messages:
+            message = random.choice(BB_LINES)
+            await chan.send(message)
+            break
+
+#=====COMMANDS TO SHUT OFF AND TURN ON BB IDLE MESSAGES======
+@bot.tree.command(name="bb_talk", description="Activate BB's auto/idle messages in the selected text channel")
+@app_commands.describe(channel="Channel to begin idle messages to.")
+async def bb_talk(interaction: discord.Interaction, channel: discord.TextChannel):
+    global idle_channel_id
+    idle_channel_id = channel.id
+    if not bb_idle_messages.is_running():
+        bb_idle_messages.start()
+
+    await interaction.response.send_message(
+        f"BB will now speak cutesy in {channel.mention}~",
+        ephemeral=True
+    )
+
+@bot.tree.command(name="bb_shutup", description="Deactivates BB's auto/idle messages in the text channels")
+async def bb_shutup(interaction: discord.Interaction):
+    bb_idle_messages.stop()
+
+    await interaction.response.send_message(
+        "Ara~ silencing me already, senpai?",
+        ephemeral=True
+    )
 
 # ===== POLL COMMAND =====
 poll_messages = {}
@@ -136,11 +161,54 @@ async def bb_say(
         )
         return
 
-    formatted = f"{message}~"
+    formatted = f"{message}"
     await channel.send(formatted)
 
     await interaction.response.send_message(
         f"Message delivered to {channel.mention}, senpai~",
+        ephemeral=True
+    )
+
+# ===== ADMIN CONTROLLED IMAGE SEND=====
+@bot.tree.command(name="bb_image", description="Make BB send an image")
+@app_commands.describe(
+    channel="Channel to send the image to",
+    image="Image file to upload",
+    caption="Optional caption"
+)
+async def bb_image(
+    interaction: discord.Interaction,
+    channel: discord.TextChannel,
+    image: discord.Attachment,
+    caption: str = None
+):
+    if not interaction.user.guild_permissions.administrator:
+        await interaction.response.send_message(
+            "Ehh~ You can't command BB like that, senpai~",
+            ephemeral=True
+        )
+        return
+
+    if not channel.permissions_for(interaction.guild.me).send_messages:
+        await interaction.response.send_message(
+            "BB can't speak there~ how tragic~",
+            ephemeral=True
+        )
+        return
+
+    #Basic type check
+    if not image.content_type or not image.content_type.startswith("image"):
+        await interaction.response.send_message(
+            "That doesn't look like an image, senpai~",
+            ephemeral=True
+        )
+        return
+
+    file = await image.to_file()
+    await channel.send(content=(caption + "~" if caption else None), file=file)
+
+    await interaction.response.send_message(
+        f"Image delivered to {channel.mention}~",
         ephemeral=True
     )
 
