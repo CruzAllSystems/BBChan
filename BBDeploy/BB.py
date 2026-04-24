@@ -43,7 +43,8 @@ async def bb_idle_messages(channel: discord.TextChannel):
 @bot.tree.command(name="bb_talk", description="Activate BB's auto/idle messages in the first text channel")
 @app_commands.describe(channel="Channel to begin idle messages to.")
 async def bb_talk(channel: discord.TextChannel):
-    bb_idle_messages.start(channel)
+    chan=channel
+    bb_idle_messages.start(chan)
 
 @bot.tree.command(name="bb_shutup", description="Deactivates BB's auto/idle messages in the first text channel")
 @app_commands.describe(channel="Channel to stop idle messages to.")
