@@ -31,22 +31,23 @@ async def on_ready():
 
 # ===== Idle BB Messages =====
 @tasks.loop(minutes=720)
-async def bb_idle_messages():
+async def bb_idle_messages(channel: discord.TextChannel):
     for guild in bot.guilds:
-        chan = discord.utils.get(guild.text_channels, name="general")
-        for channel in guild.text_channels:
-            if channel.permissions_for(guild.me).send_messages and chan:
-                message = random.choice(BB_LINES)
-                await channel.send(message)
-                break
+        chan = channel
+        if chan.permissions_for(guild.me).send_messages:
+            message = random.choice(BB_LINES)
+            await chan.send(message)
+            break
 
 #=====COMMANDS TO SHUT OFF AND TURN ON BB IDLE MESSAGES======
 @bot.tree.command(name="bb_talk", description="Activate BB's auto/idle messages in the first text channel")
-async def bb_talk():
-    bb_idle_messages.start()
+@app_commands.describe(channel="Channel to begin idle messages to.")
+async def bb_talk(channel: discord.TextChannel):
+    bb_idle_messages.start(channel)
 
 @bot.tree.command(name="bb_shutup", description="Deactivates BB's auto/idle messages in the first text channel")
-async def bb_shutup():
+@app_commands.describe(channel="Channel to stop idle messages to.")
+async def bb_shutup(channel: discord.TextChannel):
     bb_idle_messages.stop()
 
 # ===== POLL COMMAND =====
