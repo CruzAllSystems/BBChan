@@ -40,8 +40,7 @@ async def bb_idle_messages():
             break
 
 #=====COMMANDS TO SHUT OFF AND TURN ON BB IDLE MESSAGES======
-@bot.tree.command(name="bb_talk", description="Activate BB's auto/idle messages in the selected text channel")
-@app_commands.describe(channel="Channel to begin idle messages to.")
+@bot.tree.command(name="bb_talk", description="Activate BB's auto/idle messages in general")
 async def bb_talk(interaction: discord.Interaction):
     if not bb_idle_messages.is_running():
         bb_idle_messages.start()
