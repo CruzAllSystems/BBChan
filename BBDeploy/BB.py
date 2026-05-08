@@ -33,7 +33,7 @@ async def on_ready():
 @tasks.loop(minutes=720)
 async def bb_idle_messages():
     for guild in bot.guilds:
-        chan = guild.get_channel(idle_channel_id)
+        chan = discord.utils.get(guild.text_channels, name="general")
         if chan.permissions_for(guild.me).send_messages:
             message = random.choice(BB_LINES)
             await chan.send(message)
@@ -42,14 +42,12 @@ async def bb_idle_messages():
 #=====COMMANDS TO SHUT OFF AND TURN ON BB IDLE MESSAGES======
 @bot.tree.command(name="bb_talk", description="Activate BB's auto/idle messages in the selected text channel")
 @app_commands.describe(channel="Channel to begin idle messages to.")
-async def bb_talk(interaction: discord.Interaction, channel: discord.TextChannel):
-    global idle_channel_id
-    idle_channel_id = channel.id
+async def bb_talk(interaction: discord.Interaction):
     if not bb_idle_messages.is_running():
         bb_idle_messages.start()
 
     await interaction.response.send_message(
-        f"BB will now speak cutesy in {channel.mention}~",
+        f"BB will now speak cutesy every so often hehe.~",
         ephemeral=True
     )
 
@@ -120,8 +118,7 @@ async def on_raw_reaction_add(payload, counter = [0]):
     # Loop through all reactions
     for reaction in message.reactions:
         async for user in reaction.users():
-            if (user.id == payload.user_id and
-                    (str(reaction.emoji) != str(payload.emoji) or payload.emoji not in poll_messages[messagekey])):
+            if user.id == payload.user_id and str(reaction.emoji) != str(payload.emoji) or payload.emoji not in poll_messages[messagekey]:
                 await message.remove_reaction(reaction.emoji, user)
                 counter[0] += 1
                 if(counter[0] == 1):
