@@ -117,7 +117,7 @@ async def on_raw_reaction_add(payload, counter = [0]):
     # Loop through all reactions
     for reaction in message.reactions:
         async for user in reaction.users():
-            if (user.id == payload.user_id and str(reaction.emoji) != str(payload.emoji)) or (user.id == payload.user_id and payload.emoji not in poll_messages[messagekey]):
+            if (user.id == payload.user_id and str(reaction.emoji) != str(payload.emoji)) or (user.id == payload.user_id and reaction.emoji not in poll_messages[messagekey]):
                 await message.remove_reaction(reaction.emoji, user)
                 counter[0] += 1
                 if(counter[0] == 1):
