@@ -32,27 +32,21 @@ async def on_ready():
 # ===== Idle BB Messages =====
 @tasks.loop(minutes=720)
 async def bb_idle_messages():
-    if not idle_channel_id:
-        return
-
     for guild in bot.guilds:
-        chan = guild.get_channel(idle_channel_id)
+        chan = discord.utils.get(guild.text_channels, name="general")
         if chan.permissions_for(guild.me).send_messages:
             message = random.choice(BB_LINES)
             await chan.send(message)
             break
 
 #=====COMMANDS TO SHUT OFF AND TURN ON BB IDLE MESSAGES======
-@bot.tree.command(name="bb_talk", description="Activate BB's auto/idle messages in the selected text channel")
-@app_commands.describe(channel="Channel to begin idle messages to.")
-async def bb_talk(interaction: discord.Interaction, channel: discord.TextChannel):
-    global idle_channel_id
-    idle_channel_id = channel.id
+@bot.tree.command(name="bb_talk", description="Activate BB's auto/idle messages in general")
+async def bb_talk(interaction: discord.Interaction):
     if not bb_idle_messages.is_running():
         bb_idle_messages.start()
 
     await interaction.response.send_message(
-        f"BB will now speak cutesy in {channel.mention}~",
+        f"BB will now speak cutesy every so often hehe.~",
         ephemeral=True
     )
 
@@ -96,7 +90,9 @@ async def poll(interaction: discord.Interaction, channel: discord.TextChannel, q
 
     for emoji in emojis:
         await msg.add_reaction(emoji)
-    poll_messages[msg.id] = emojis
+    global messagekey
+    messagekey = msg.id # key to keep track of poll imbeds
+    poll_messages[messagekey] = emojis
 
     # Confirm to admin
     await interaction.response.send_message(
@@ -121,13 +117,12 @@ async def on_raw_reaction_add(payload, counter = [0]):
     # Loop through all reactions
     for reaction in message.reactions:
         async for user in reaction.users():
-            if user.id == payload.user_id and str(reaction.emoji) != str(payload.emoji):
+            if (user.id == payload.user_id and str(reaction.emoji) != str(payload.emoji)) or (user.id == payload.user_id and reaction.emoji not in poll_messages[messagekey]):
                 await message.remove_reaction(reaction.emoji, user)
                 counter[0] += 1
                 if(counter[0] == 1):
-                    await channel.send("Ara~ Trying to vote twice, senpais? How naughty~")
-                elif(counter[0] >= 30):
-                    await channel.send("If my senpais keep being naughty, I'm going to have to tell on you.~")
+                    await channel.send("Ara~ Trying to alter votes senpais? How naughty~")
+
 
 # ===== TEMP CHANNEL COMMAND =====
 @bot.tree.command(name="temp_channel", description="Create a temporary channel")
@@ -149,11 +144,7 @@ async def temp_channel(interaction: discord.Interaction, name: str, duration: in
     channel="Channel to send the message to",
     message="Message for BB to say"
 )
-async def bb_say(
-    interaction: discord.Interaction,
-    channel: discord.TextChannel,
-    message: str
-):
+async def bb_say(interaction: discord.Interaction, channel: discord.TextChannel, message: str):
     if not interaction.user.guild_permissions.administrator:
         await interaction.response.send_message(
             "Ehh~ You can't order BB around like that~",
@@ -209,6 +200,50 @@ async def bb_image(
 
     await interaction.response.send_message(
         f"Image delivered to {channel.mention}~",
+        ephemeral=True
+    )
+
+# ======== BB ROLLING DICE ========
+@bot.tree.command(name="bb_roll", description="Have BB roll a d20 in a selected channel")
+@app_commands.describe(channel="The channel BB should send the roll to")
+async def bb_roll(interaction: discord.Interaction, channel: discord.TextChannel):
+
+    # Admin check
+    if not interaction.user.guild_permissions.administrator:
+        await interaction.response.send_message(
+            "Ara~ only admins can make BB roll dice publicly, senpai~",
+            ephemeral=True
+        )
+        return
+
+    # Roll the dice
+    roll = random.randint(1, 20)
+
+    # BB flavor text
+    if roll == 20:
+        result_text = (
+            f"🎲 **Natural 20!!**\n"
+            f"Ufufu~ BB delivers perfection once again, senpai~"
+        )
+
+    elif roll == 1:
+        result_text = (
+            f"🎲 **Natural 1...**\n"
+            f"Oh dear~ what an unfortunate little disaster, senpai~"
+        )
+
+    else:
+        result_text = (
+            f"🎲 BB rolled a **{roll}**!\n"
+            f"How exciting~"
+        )
+
+    # Send to target channel
+    await channel.send(result_text)
+
+    # Respond privately to command user
+    await interaction.response.send_message(
+        f"BB rolled the dice in {channel.mention}~",
         ephemeral=True
     )
 
