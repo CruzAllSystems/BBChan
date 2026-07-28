@@ -268,14 +268,14 @@ async def bb_breaktie(interaction: discord.Interaction, channel: discord.TextCha
     # BB flavor text
     if tieroll == 1:
         result_text = (
-            f"Eenie meenie miney moe. Catch a senpai by their toes.~"
+            f"Eenie meenie miney moe. Catch a senpai by their toes.~\n"
             f"BB chooses {option1} to win~"
 
         )
 
     elif tieroll == 2:
         result_text = (
-            f"Eenie meenie miney moe. Catch a senpai by their toes.~"
+            f"Eenie meenie miney moe. Catch a senpai by their toes.~\n"
             f"BB chooses {option2} to win~"
         )
 
