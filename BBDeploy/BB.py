@@ -247,5 +247,47 @@ async def bb_roll(interaction: discord.Interaction, channel: discord.TextChannel
         ephemeral=True
     )
 
+# ======== BB DECIDING TIE ========
+@bot.tree.command(name="bb_breaktie", description="Have BB break the tie of a 2 option poll in a selected channel")
+@app_commands.describe(channel="The channel BB should send the roll to",
+                       option1="Option 1",
+                       option2="Option 2")
+async def bb_breaktie(interaction: discord.Interaction, channel: discord.TextChannel, option1: str, option2: str):
+
+    # Admin check
+    if not interaction.user.guild_permissions.administrator:
+        await interaction.response.send_message(
+            "Ara~ only admins can make BB roll dice publicly, senpai~",
+            ephemeral=True
+        )
+        return
+
+    # Decide the tie
+    tieroll = random.randint(1, 2)
+
+    # BB flavor text
+    if tieroll == 1:
+        result_text = (
+            f"Eenie meenie miney moe. Catch a senpai by their toes.~\n"
+            f"BB chooses {option1} to win~"
+
+        )
+
+    elif tieroll == 2:
+        result_text = (
+            f"Eenie meenie miney moe. Catch a senpai by their toes.~\n"
+            f"BB chooses {option2} to win~"
+        )
+
+    # Send to target channel
+    await channel.send(result_text)
+
+    # Respond privately to command user
+    await interaction.response.send_message(
+        f"BB broke the tie in {channel.mention}~",
+        ephemeral=True
+    )
+
+
 # ===== RUN BOT =====
 bot.run(TOKEN)
