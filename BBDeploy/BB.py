@@ -196,7 +196,7 @@ async def bb_image(
         return
 
     file = await image.to_file()
-    await channel.send(content=(caption + "~" if caption else None), file=file)
+    await channel.send(content=(caption if caption else None), file=file)
 
     await interaction.response.send_message(
         f"Image delivered to {channel.mention}~",
@@ -257,7 +257,7 @@ async def bb_breaktie(interaction: discord.Interaction, channel: discord.TextCha
     # Admin check
     if not interaction.user.guild_permissions.administrator:
         await interaction.response.send_message(
-            "Ara~ only admins can make BB roll dice publicly, senpai~",
+            "Ara~ only admins can make BB be a tie breaker publicly, senpai~",
             ephemeral=True
         )
         return
