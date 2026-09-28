@@ -169,6 +169,27 @@ async def bb_say(interaction: discord.Interaction, channel: discord.TextChannel,
         f"Message delivered to {channel.mention}, senpai~",
         ephemeral=True
     )
+#test command
+@bot.tree.command(name="bb_say2", description="Make BB send a message in a specific channel")
+@app_commands.describe(
+    channel="Channel to send the message to",
+    message="Message for BB to say"
+)
+async def bb_say2(interaction: discord.Interaction, channel: discord.TextChannel, message: str):
+    if not interaction.user.guild_permissions.administrator:
+        await interaction.response.send_message(
+            "Ehh~ You can't order BB around like that~",
+            ephemeral=True
+        )
+        return
+
+    formatted = f"{message}"
+    await channel.send(formatted)
+
+    await interaction.response.send_message(
+        f"Message delivered to {channel.mention}, senpai~",
+        ephemeral=True
+    )
 
 # ===== ADMIN CONTROLLED IMAGE SEND=====
 @bot.tree.command(name="bb_image", description="Make BB send an image")
@@ -214,7 +235,7 @@ async def bb_image(
     )
 
 # ===== ADMIN CONTROLLED IMAGE SEND FOR MULTIPLE IMAGES=====
-@bot.tree.command(name="bb_multiimage", description="Have BB send multiple images to a selected channel")
+@bot.tree.command(name="bb_set", description="Have BB send multiple images to a selected channel")
 @app_commands.describe(
     channel="Channel where BB should send the images",
     image1="First image",
@@ -229,7 +250,7 @@ async def bb_image(
     image10="Tenth image",
     caption="Optional caption"
 )
-async def bb_multiimage(
+async def bb_set(
         interaction: discord.Interaction,
         channel: discord.TextChannel,
         image1: discord.Attachment,
