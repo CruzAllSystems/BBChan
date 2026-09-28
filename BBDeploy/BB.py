@@ -25,8 +25,18 @@ BB_LINES = [
 # ===== On Ready =====
 @bot.event
 async def on_ready():
-    await bot.tree.sync()
-    print(f"{bot.user} is online!")
+    try:
+        synced = await bot.tree.sync()
+
+        print(f"{bot.user} is online!")
+        print(f"Synced {len(synced)} commands:")
+
+        for command in synced:
+            print(f"  /{command.name}")
+
+    except Exception as e:
+        print("ERROR WHILE SYNCING COMMANDS:")
+        print(repr(e))
     #bb_idle_messages.start()
 
 # ===== Idle BB Messages =====
@@ -258,19 +268,19 @@ async def bb_multiimage(
     if image3 is not None:
         attachments.append(image3)
     if image4 is not None:
-        attachments.append(image3)
+        attachments.append(image4)
     if image5 is not None:
-        attachments.append(image3)
+        attachments.append(image5)
     if image6 is not None:
-        attachments.append(image3)
+        attachments.append(image6)
     if image7 is not None:
-        attachments.append(image3)
+        attachments.append(image7)
     if image8 is not None:
-        attachments.append(image3)
+        attachments.append(image8)
     if image9 is not None:
-        attachments.append(image3)
+        attachments.append(image9)
     if image10 is not None:
-        attachments.append(image3)
+        attachments.append(image10)
 
     # Verify they are images
     for image in attachments:
