@@ -169,27 +169,6 @@ async def bb_say(interaction: discord.Interaction, channel: discord.TextChannel,
         f"Message delivered to {channel.mention}, senpai~",
         ephemeral=True
     )
-#test command
-@bot.tree.command(name="bb_say2", description="Make BB send a message in a specific channel")
-@app_commands.describe(
-    channel="Channel to send the message to",
-    message="Message for BB to say"
-)
-async def bb_say2(interaction: discord.Interaction, channel: discord.TextChannel, message: str):
-    if not interaction.user.guild_permissions.administrator:
-        await interaction.response.send_message(
-            "Ehh~ You can't order BB around like that~",
-            ephemeral=True
-        )
-        return
-
-    formatted = f"{message}"
-    await channel.send(formatted)
-
-    await interaction.response.send_message(
-        f"Message delivered to {channel.mention}, senpai~",
-        ephemeral=True
-    )
 
 # ===== ADMIN CONTROLLED IMAGE SEND=====
 @bot.tree.command(name="bb_image", description="Make BB send an image")
