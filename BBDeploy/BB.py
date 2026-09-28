@@ -203,7 +203,8 @@ async def bb_image(
         ephemeral=True
     )
 
-@bot.tree.command(name="bb_set", description="Have BB send multiple images to a selected channel")
+# ===== ADMIN CONTROLLED IMAGE SEND FOR MULTIPLE IMAGES=====
+@bot.tree.command(name="bb_multiimage", description="Have BB send multiple images to a selected channel")
 @app_commands.describe(
     channel="Channel where BB should send the images",
     image1="First image",
@@ -218,7 +219,7 @@ async def bb_image(
     image10="Tenth image",
     caption="Optional caption"
 )
-async def bb_set(
+async def bb_multiimage(
         interaction: discord.Interaction,
         channel: discord.TextChannel,
         image1: discord.Attachment,
