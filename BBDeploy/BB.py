@@ -25,8 +25,18 @@ BB_LINES = [
 # ===== On Ready =====
 @bot.event
 async def on_ready():
-    await bot.tree.sync()
-    print(f"{bot.user} is online!")
+    try:
+        synced = await bot.tree.sync()
+
+        print(f"{bot.user} is online!")
+        print(f"Synced {len(synced)} commands:")
+
+        for command in synced:
+            print(f"  /{command.name}")
+
+    except Exception as e:
+        print("ERROR WHILE SYNCING COMMANDS:")
+        print(repr(e))
     #bb_idle_messages.start()
 
 # ===== Idle BB Messages =====
@@ -200,6 +210,98 @@ async def bb_image(
 
     await interaction.response.send_message(
         f"Image delivered to {channel.mention}~",
+        ephemeral=True
+    )
+
+# ===== ADMIN CONTROLLED IMAGE SEND FOR MULTIPLE IMAGES=====
+@bot.tree.command(name="bb_set", description="Have BB send multiple images to a selected channel")
+@app_commands.describe(
+    channel="Channel where BB should send the images",
+    image1="First image",
+    image2="Second image",
+    image3="Third image",
+    image4="Forth image",
+    image5="Fifth image",
+    image6="Sixth image",
+    image7="Seventh image",
+    image8="Eighth image",
+    image9="Ninth image",
+    image10="Tenth image",
+    caption="Optional caption"
+)
+async def bb_set(
+        interaction: discord.Interaction,
+        channel: discord.TextChannel,
+        image1: discord.Attachment,
+        image2: discord.Attachment,
+        image3: discord.Attachment = None,
+        image4: discord.Attachment = None,
+        image5: discord.Attachment = None,
+        image6: discord.Attachment = None,
+        image7: discord.Attachment = None,
+        image8: discord.Attachment = None,
+        image9: discord.Attachment = None,
+        image10: discord.Attachment = None,
+        caption: str = None
+):
+    # Admin check
+    if not interaction.user.guild_permissions.administrator:
+        await interaction.response.send_message(
+            "Ara~ only admins can command BB like that, senpai~",
+            ephemeral=True
+        )
+        return
+
+    # Check bot permissions
+    permissions = channel.permissions_for(interaction.guild.me)
+
+    if not permissions.send_messages or not permissions.attach_files:
+        await interaction.response.send_message(
+            "BB can't send files in that channel, senpai~",
+            ephemeral=True
+        )
+        return
+
+    # Put the attachments into a list
+    attachments = [image1, image2]
+
+    if image3 is not None:
+        attachments.append(image3)
+    if image4 is not None:
+        attachments.append(image4)
+    if image5 is not None:
+        attachments.append(image5)
+    if image6 is not None:
+        attachments.append(image6)
+    if image7 is not None:
+        attachments.append(image7)
+    if image8 is not None:
+        attachments.append(image8)
+    if image9 is not None:
+        attachments.append(image9)
+    if image10 is not None:
+        attachments.append(image10)
+
+    # Verify they are images
+    for image in attachments:
+        if not image.content_type or not image.content_type.startswith("image/"):
+            await interaction.response.send_message(
+                "One of those files isn't an image, senpai~",
+                ephemeral=True
+            )
+            return
+
+    # Convert Discord attachments into File objects
+    files = [await image.to_file() for image in attachments]
+
+    # Send them together
+    await channel.send(
+        content=caption,
+        files=files
+    )
+
+    await interaction.response.send_message(
+        f"BB sent {len(files)} images to {channel.mention}~",
         ephemeral=True
     )
 
