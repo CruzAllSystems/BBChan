@@ -4,7 +4,7 @@ from discord import app_commands
 import asyncio
 import random
 import os
-from strikes import initialize_database, get_strikes, add_strike, remove_strike, clear_strikes
+from strikes import initialize_database, get_strikes, add_strike, remove_strike, clear_strikes, DATABASE
 
 TOKEN = os.getenv("DISCORD_TOKEN")
 
