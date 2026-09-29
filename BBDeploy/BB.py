@@ -4,6 +4,7 @@ from discord import app_commands
 import asyncio
 import random
 import os
+from strikes import initialize_database, get_strikes, add_strike, remove_strike, clear_strikes, DATABASE
 
 TOKEN = os.getenv("DISCORD_TOKEN")
 
@@ -26,16 +27,19 @@ BB_LINES = [
 @bot.event
 async def on_ready():
     try:
+        initialize_database()
         synced = await bot.tree.sync()
 
         print(f"{bot.user} is online!")
+        print(f"Connected to {len(bot.guilds)} server(s)")
+        print(f"Database: {DATABASE}")
         print(f"Synced {len(synced)} commands:")
 
         for command in synced:
             print(f"  /{command.name}")
 
     except Exception as e:
-        print("ERROR WHILE SYNCING COMMANDS:")
+        print("ERROR ON INITIALIZATION:")
         print(repr(e))
     #bb_idle_messages.start()
 
@@ -390,6 +394,182 @@ async def bb_breaktie(interaction: discord.Interaction, channel: discord.TextCha
         ephemeral=True
     )
 
+# ===== STRIKE SYSTEM =====
+@bot.tree.command(name="bb_strike", description="Give a user a strike for violating server rules")
+@app_commands.describe(user="The user receiving the strike",reason="Reason for the strike")
+async def bb_strike(
+    interaction: discord.Interaction,
+    user: discord.Member,
+    reason: str
+):
+
+    # Admin check
+    if not interaction.user.guild_permissions.administrator:
+        await interaction.response.send_message(
+            "Ara~ Only administrators can give strikes, senpai~",
+            ephemeral=True
+        )
+        return
+
+    # Add the strike to the database
+    add_strike(
+        guild_id=interaction.guild.id,
+        user_id=user.id,
+        reason=reason,
+        moderator_id=interaction.user.id
+    )
+
+    # Get updated strike history
+    strikes = get_strikes(
+        guild_id=interaction.guild.id,
+        user_id=user.id
+    )
+
+    strike_count = len(strikes)
+
+    # Confirm to administrator
+    await interaction.response.send_message(
+        f"⚠️ {user.mention} has received a strike.\n"
+        f"They now have **{strike_count} strike(s)**.\n"
+        f"Reason: {reason}",
+        ephemeral=True
+    )
+
+@bot.tree.command(name="bb_strikes", description="View a user's strike history")
+@app_commands.describe(user="The user whose strikes you want to view")
+async def bb_strikes(
+    interaction: discord.Interaction,
+    user: discord.Member
+):
+
+    # Admin check
+    if not interaction.user.guild_permissions.administrator:
+        await interaction.response.send_message(
+            "Ara~ Only administrators can view strike records, senpai~",
+            ephemeral=True
+        )
+        return
+
+    # Get strikes
+    strikes = get_strikes(
+        guild_id=interaction.guild.id,
+        user_id=user.id
+    )
+
+    # No strikes
+    if not strikes:
+        await interaction.response.send_message(
+            f"✨ {user.mention} has no strikes on record~ What a good senpai!~",
+            ephemeral=True
+        )
+        return
+
+    # Create embed
+    embed = discord.Embed(
+        title="⚠️ BB's Strike Record",
+        description=f"Strike history for {user.mention}",
+        color=discord.Color.dark_purple()
+    )
+
+    embed.add_field(
+        name="Current Strikes",
+        value=str(len(strikes)),
+        inline=False
+    )
+
+    # Add each strike
+    for number, strike in enumerate(strikes, start=1):
+
+        strike_id, reason, moderator_id, timestamp = strike
+
+        embed.add_field(
+            name=f"Strike #{number}",
+            value=(
+                f"**Reason:** {reason}\n"
+                f"**Moderator:** <@{moderator_id}>\n"
+                f"**Date:** {timestamp}"
+            ),
+            inline=False
+        )
+
+    await interaction.response.send_message(
+        embed=embed,
+        ephemeral=True
+    )
+
+@bot.tree.command(name="bb_unstrike", description="Remove a user's most recent strike")
+@app_commands.describe(user="The user whose most recent strike should be removed")
+async def bb_unstrike(
+    interaction: discord.Interaction,
+    user: discord.Member
+):
+
+    # Admin check
+    if not interaction.user.guild_permissions.administrator:
+        await interaction.response.send_message(
+            "Ara~ Only administrators can remove strikes, senpai~",
+            ephemeral=True
+        )
+        return
+
+    # Attempt to remove most recent strike
+    removed = remove_strike(
+        guild_id=interaction.guild.id,
+        user_id=user.id
+    )
+
+    # No strike existed
+    if not removed:
+        await interaction.response.send_message(
+            f"{user.mention} doesn't have any strikes to remove~",
+            ephemeral=True
+        )
+        return
+
+    # Get remaining strikes
+    strikes = get_strikes(
+        guild_id=interaction.guild.id,
+        user_id=user.id
+    )
+
+    await interaction.response.send_message(
+        f"Strike removed from {user.mention}~\n"
+        f"They now have **{len(strikes)} strike(s)**.",
+        ephemeral=True
+    )
+
+@bot.tree.command(name="bb_clearstrikes", description="Clear all strikes for a user")
+@app_commands.describe(user="The user whose strike history should be cleared")
+async def bb_clearstrikes(
+    interaction: discord.Interaction,
+    user: discord.Member
+):
+
+    # Admin check
+    if not interaction.user.guild_permissions.administrator:
+        await interaction.response.send_message(
+            "Ara~ Only administrators can clear strike records, senpai~",
+            ephemeral=True
+        )
+        return
+
+    # Clear strikes
+    removed = clear_strikes(
+        guild_id=interaction.guild.id,
+        user_id=user.id
+    )
+
+    if not removed:
+        await interaction.response.send_message(
+            f"{user.mention} has no strikes to clear~",
+            ephemeral=True
+        )
+        return
+
+    await interaction.response.send_message(
+        f"✨ All strikes for {user.mention} have been cleared~",
+        ephemeral=True
+    )
 
 # ===== RUN BOT =====
 bot.run(TOKEN)
