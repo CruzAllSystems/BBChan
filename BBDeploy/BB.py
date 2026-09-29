@@ -4,7 +4,6 @@ from discord import app_commands
 import asyncio
 import random
 import os
-from BBDeploy.strikes import DATABASE
 from strikes import initialize_database, get_strikes, add_strike, remove_strike, clear_strikes
 
 TOKEN = os.getenv("DISCORD_TOKEN")
